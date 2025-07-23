@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ecommerce AI Agent</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; background-color: #f5f5f5; }
+    h1 { color: #333; }
+    input[type="text"] {
+      width: 80%;
+      padding: 10px;
+      font-size: 1rem;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      margin-left: 10px;
+    }
+    .result {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .error { color: red; }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ask Anything About Ecommerce Data</h1>
+  <input type="text" id="question" placeholder="Ask your question...">
+  <button onclick="askQuestion()">Ask</button>
+
+  <div class="result" id="output"></div>
+
+  <script>
+    async function askQuestion() {
+      const question = document.getElementById("question").value;
+      const output = document.getElementById("output");
+      output.innerHTML = "Thinking... 🤖";
+
+      try {
+        const response = await fetch(`/ask?q=${encodeURIComponent(question)}`);
+        const data = await response.json();
+
+        if (data.error) {
+          output.innerHTML = `<p class="error">Error: ${data.error}</p>`;
+        } else {
+          output.innerHTML = `
+            <p><strong>Question:</strong> ${data.question}</p>
+            <p><strong>SQL:</strong> ${data.sql}</p>
+            <p><strong>Answer:</strong><br>${formatResult(data.result)}</p>
+          `;
+        }
+      } catch (err) {
+        output.innerHTML = `<p class="error">Failed to fetch response.</p>`;
+      }
+    }
+
+    function formatResult(result) {
+      if (!Array.isArray(result)) {
+        return `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+      }
+
+      if (result.length === 0) return "No results found.";
+
+      let keys = Object.keys(result[0]);
+      let html = "<table><tr>";
+      for (let key of keys) {
+        html += `<th>${key}</th>`;
+      }
+      html += "</tr>";
+
+      for (let row of result) {
+        html += "<tr>";
+        for (let key of keys) {
+          html += `<td>${row[key]}</td>`;
+        }
+        html += "</tr>";
+      }
+
+      html += "</table>";
+      return html;
+    }
+  </script>
+</body>
+</html>
